@@ -136,6 +136,8 @@ src/
 
 ## 📦 构建部署
 
+### 本地构建
+
 ```bash
 # 构建生产版本
 pnpm build
@@ -143,6 +145,35 @@ pnpm build
 # 预览构建结果
 pnpm preview
 ```
+
+### Docker 部署
+
+直接运行以下命令，如果镜像不存在会自动构建：
+
+```bash
+# 启动服务（自动构建镜像）
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+访问 http://localhost:3000
+
+**其他 Docker 命令：**
+
+```bash
+# 强制重新构建镜像
+docker-compose up -d --build
+
+# 仅构建镜像不运行
+docker-compose build
+```
+
+> 💡 Docker 构建前请确保已配置 `src/api/config.local.ts` 文件。
 
 ## 📄 License
 

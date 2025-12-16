@@ -216,12 +216,13 @@ function initEditor() {
       showToolbar: 'onHover',
       mode: 'subword'
     },
-    // 快速建议
+    // 快速建议（禁用以避免与 AI 补全冲突）
     quickSuggestions: false,
     // 参数提示
     parameterHints: { enabled: false },
-    // 代码建议
-    suggest: { enabled: false }
+    // 代码建议（禁用自动完成）
+    suggestOnTriggerCharacters: false,
+    wordBasedSuggestions: 'off'
   })
 
   // 监听内容变化
