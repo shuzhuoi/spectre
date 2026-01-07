@@ -39,5 +39,10 @@
     "vite": "^5.2.0",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vue-tsc": "^2.0.6"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shuzhuoi/spectre.git"
+  },
+  "keywords": ["ai", "editor", "autocomplete", "vue"]
 }
