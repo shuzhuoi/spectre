@@ -4,6 +4,7 @@
   "description": "AI 文本补全编辑器 - 像幽灵一样悄然出现的智能补全",
   "private": true,
   "type": "module",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
