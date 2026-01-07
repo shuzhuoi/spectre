@@ -162,8 +162,20 @@ src/
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | provider | string | `openai` | AI 服务提供商：`openai` 或 `dify` |
-| minTriggerLength | number | 5 | 触发补全的最小字符数 |
-| debounceDelay | number | 500 | 防抖延迟 (ms) |
+
+### 自动补全配置
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| autoComplete.minTriggerLength | number | 5 | 触发补全的最小字符数 |
+| autoComplete.debounce.normal | number | 500 | 正常编写时的防抖延迟 (ms) |
+| autoComplete.debounce.newLine | number | 200 | 换行时的防抖延迟 (ms) - 快速响应 |
+| autoComplete.debounce.paste | number | 1000 | 粘贴后的防抖延迟 (ms) |
+| autoComplete.context.mode | string | `lines` | 上下文模式：`lines` 按行数 或 `chars` 按字符数 |
+| autoComplete.context.maxLines | number | 3 | 最多发送前N行（0表示只发送当前行） |
+| autoComplete.context.maxChars | number | 500 | 最多发送N个字符（超过会截断） |
+| autoComplete.trigger.onNewLine | boolean | true | 换行时是否快速触发补全 |
+| autoComplete.trigger.skipAfterPunctuation | string[] | `['。', '.', '!', '?', '！', '？', '；', ';']` | 不触发补全的标点符号列表 |
 
 ### OpenAI 配置
 
@@ -189,6 +201,8 @@ src/
 > ⚠️ **Dify 限制**：Dify Workflow 的输入变量最多只能接收 256 个字符（官方限制）。超过此长度的文本会自动截断，保留最后的字符。设置为 `-1` 可以不限制（如果你的 Dify 实例支持）。
 
 > 💡 **无结果处理**：当 Dify 返回 `noResultIdentifier` 配置的值（默认 `[NONE]`）时，表示没有补全结果，不会在页面上显示。
+
+> 💡 **上下文优化**：通过 `autoComplete.context` 配置可以控制发送给 AI 的上下文大小。设置 `maxLines: 0` 可以只发送当前行，节省 token；设置 `maxLines: 3-5` 可以提供更多上下文，提高补全质量。
 
 ## ⚠️ 安全提醒
 

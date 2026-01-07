@@ -59,6 +59,49 @@ export interface DifyConfig {
 }
 
 /**
+ * 上下文模式
+ * - lines: 按行数获取上下文
+ * - chars: 按字符数获取上下文
+ */
+export type ContextMode = 'lines' | 'chars'
+
+/**
+ * 自动补全配置接口
+ */
+export interface AutoCompleteConfig {
+  /** 触发补全的最小字符数 */
+  minTriggerLength: number
+  
+  /** 防抖延迟配置 */
+  debounce: {
+    /** 正常编写延迟 (毫秒) */
+    normal: number
+    /** 换行时延迟 (毫秒) */
+    newLine: number
+    /** 粘贴后延迟 (毫秒) */
+    paste: number
+  }
+  
+  /** 上下文配置 */
+  context: {
+    /** 上下文模式 */
+    mode: ContextMode
+    /** 最多发送前N行（0表示只发送当前行） */
+    maxLines: number
+    /** 最多发送N个字符 */
+    maxChars: number
+  }
+  
+  /** 触发条件配置 */
+  trigger: {
+    /** 换行时是否触发 */
+    onNewLine: boolean
+    /** 不触发的标点符号（如句号、问号等） */
+    skipAfterPunctuation: string[]
+  }
+}
+
+/**
  * 统一 AI 配置接口
  */
 export interface AIConfig {
@@ -68,10 +111,8 @@ export interface AIConfig {
   openai: OpenAIConfig
   /** Dify 配置 */
   dify: DifyConfig
-  /** 触发补全的最小字符数 */
-  minTriggerLength: number
-  /** 防抖延迟时间 (毫秒) */
-  debounceDelay: number
+  /** 自动补全配置 */
+  autoComplete: AutoCompleteConfig
 }
 
 /**

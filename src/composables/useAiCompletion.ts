@@ -47,7 +47,7 @@ export function useAiCompletion() {
     }
 
     // 文本太短时不触发
-    if (text.trim().length < AI_CONFIG.minTriggerLength) {
+    if (text.trim().length < AI_CONFIG.autoComplete.minTriggerLength) {
       suggestion.value = ''
       return ''
     }
@@ -92,11 +92,27 @@ export function useAiCompletion() {
   }
 
   /**
-   * 防抖版本的请求补全方法
+   * 防抖版本的请求补全方法（正常编写）
    */
   const debouncedRequestCompletion = useDebounceFn(
     requestCompletion,
-    AI_CONFIG.debounceDelay
+    AI_CONFIG.autoComplete.debounce.normal
+  )
+
+  /**
+   * 防抖版本的请求补全方法（换行时）
+   */
+  const debouncedRequestCompletionOnNewLine = useDebounceFn(
+    requestCompletion,
+    AI_CONFIG.autoComplete.debounce.newLine
+  )
+
+  /**
+   * 防抖版本的请求补全方法（粘贴后）
+   */
+  const debouncedRequestCompletionAfterPaste = useDebounceFn(
+    requestCompletion,
+    AI_CONFIG.autoComplete.debounce.paste
   )
 
   /**
@@ -131,8 +147,12 @@ export function useAiCompletion() {
     error,
     /** 请求补全（立即执行） */
     requestCompletion,
-    /** 请求补全（防抖） */
+    /** 请求补全（防抖 - 正常编写） */
     debouncedRequestCompletion,
+    /** 请求补全（防抖 - 换行时） */
+    debouncedRequestCompletionOnNewLine,
+    /** 请求补全（防抖 - 粘贴后） */
+    debouncedRequestCompletionAfterPaste,
     /** 清除建议 */
     clearSuggestion,
     /** 接受建议 */

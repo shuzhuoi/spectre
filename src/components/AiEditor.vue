@@ -60,6 +60,21 @@ const currentSuggestion = ref('')
 // 是否正在加载补全
 const isLoading = ref(false)
 
+// 是否刚刚粘贴
+const isPasting = ref(false)
+
+// 是否刚刚换行
+const isNewLine = ref(false)
+
+// 上一次的行号
+let lastLineNumber = 1
+
+// 换行状态重置定时器
+let newLineResetTimer: ReturnType<typeof setTimeout> | null = null
+
+// 粘贴状态重置定时器
+let pasteResetTimer: ReturnType<typeof setTimeout> | null = null
+
 /**
  * 取消当前请求
  */
@@ -71,11 +86,96 @@ function cancelCurrentRequest() {
 }
 
 /**
+ * 检查是否应该跳过触发补全
+ * @param text 当前文本
+ * @returns 是否应该跳过
+ */
+function shouldSkipTrigger(text: string): boolean {
+  if (!text || text.length === 0) {
+    return true
+  }
+
+  // 获取最后一个字符
+  const lastChar = text.charAt(text.length - 1)
+
+  // 检查是否是不触发的标点符号
+  const skipPunctuation = AI_CONFIG.autoComplete.trigger.skipAfterPunctuation
+  if (skipPunctuation.includes(lastChar)) {
+    console.log('[AiEditor] 跳过触发：光标前是标点符号', lastChar)
+    return true
+  }
+
+  return false
+}
+
+/**
+ * 获取上下文文本
+ * 根据配置获取光标前的上下文内容
+ * @param model 编辑器模型
+ * @param position 光标位置
+ * @returns 上下文文本
+ */
+function getContextText(
+  model: monaco.editor.ITextModel,
+  position: monaco.Position
+): string {
+  const config = AI_CONFIG.autoComplete.context
+
+  if (config.mode === 'lines') {
+    // 按行数获取上下文
+    let startLine: number
+    
+    // 检查当前行是否为空（换行后的情况）
+    const currentLineText = model.getLineContent(position.lineNumber)
+    const isEmptyLine = position.column === 1 && currentLineText.trim().length === 0
+    
+    if (config.maxLines === 0) {
+      // maxLines 为 0 时，只获取当前行光标前的内容
+      // 但如果是空行（换行后），则获取上一行的内容
+      if (isEmptyLine && position.lineNumber > 1) {
+        startLine = position.lineNumber - 1
+      } else {
+        startLine = position.lineNumber
+      }
+    } else {
+      // 获取前 N 行 + 当前行
+      startLine = Math.max(1, position.lineNumber - config.maxLines)
+    }
+    
+    let text = model.getValueInRange({
+      startLineNumber: startLine,
+      startColumn: 1,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column
+    })
+
+    // 如果超过字符限制，截断
+    if (text.length > config.maxChars) {
+      text = text.slice(-config.maxChars)
+    }
+
+    return text
+  } else {
+    // 按字符数获取上下文
+    const fullText = model.getValueInRange({
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column
+    })
+
+    // 保留最后 N 个字符
+    return fullText.slice(-config.maxChars)
+  }
+}
+
+/**
  * 获取 AI 补全建议
  * @param text 当前文本
+ * @param isNewLineContext 是否是换行触发的上下文
  * @returns 补全建议
  */
-async function getAiCompletion(text: string): Promise<string> {
+async function getAiCompletion(text: string, isNewLineContext = false): Promise<string> {
   // 检查配置
   if (!isConfigValid()) {
     emit('completion-error', '请先配置有效的 API Key')
@@ -83,7 +183,9 @@ async function getAiCompletion(text: string): Promise<string> {
   }
 
   // 文本太短不触发
-  if (text.trim().length < AI_CONFIG.minTriggerLength) {
+  // 换行时放宽限制，只要有内容就触发
+  const minLength = isNewLineContext ? 1 : AI_CONFIG.autoComplete.minTriggerLength
+  if (text.trim().length < minLength) {
     return ''
   }
 
@@ -123,11 +225,27 @@ async function getAiCompletion(text: string): Promise<string> {
 }
 
 /**
- * 防抖版本的补全请求
+ * 防抖版本的补全请求（正常编写）
  */
 const debouncedGetCompletion = useDebounceFn(
-  getAiCompletion,
-  AI_CONFIG.debounceDelay
+  (text: string) => getAiCompletion(text, false),
+  AI_CONFIG.autoComplete.debounce.normal
+)
+
+/**
+ * 防抖版本的补全请求（换行时）
+ */
+const debouncedGetCompletionOnNewLine = useDebounceFn(
+  (text: string) => getAiCompletion(text, true),
+  AI_CONFIG.autoComplete.debounce.newLine
+)
+
+/**
+ * 防抖版本的补全请求（粘贴后）
+ */
+const debouncedGetCompletionAfterPaste = useDebounceFn(
+  (text: string) => getAiCompletion(text, false),
+  AI_CONFIG.autoComplete.debounce.paste
 )
 
 /**
@@ -148,16 +266,26 @@ function registerInlineCompletionProvider() {
           return { items: [] }
         }
 
-        // 获取光标前的所有文本
-        const textUntilPosition = model.getValueInRange({
-          startLineNumber: 1,
-          startColumn: 1,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column
-        })
+        // 获取上下文文本（根据配置）
+        const contextText = getContextText(model, position)
 
-        // 获取 AI 补全
-        const completion = await debouncedGetCompletion(textUntilPosition)
+        // 检查是否应该跳过触发
+        if (shouldSkipTrigger(contextText)) {
+          return { items: [] }
+        }
+
+        // 根据状态选择不同的防抖延迟
+        let completion: string
+        if (isPasting.value) {
+          // 粘贴后使用更长的延迟
+          completion = await debouncedGetCompletionAfterPaste(contextText)
+        } else if (isNewLine.value && AI_CONFIG.autoComplete.trigger.onNewLine) {
+          // 换行时使用更短的延迟
+          completion = await debouncedGetCompletionOnNewLine(contextText)
+        } else {
+          // 正常编写使用默认延迟
+          completion = await debouncedGetCompletion(contextText)
+        }
 
         // 如果没有补全内容或请求已取消
         if (!completion || token.isCancellationRequested) {
@@ -229,6 +357,62 @@ function initEditor() {
   editor.onDidChangeModelContent(() => {
     const value = editor?.getValue() || ''
     emit('update:modelValue', value)
+
+    // 检测是否换行
+    if (editor) {
+      const position = editor.getPosition()
+      if (position) {
+        const currentLine = position.lineNumber
+        
+        // 如果行号增加，说明换行了
+        if (currentLine > lastLineNumber) {
+          // 取消之前的请求，避免快速换行触发多条
+          cancelCurrentRequest()
+          
+          isNewLine.value = true
+          console.log('[AiEditor] 检测到换行，使用快速触发')
+          
+          // 清除之前的定时器
+          if (newLineResetTimer) {
+            clearTimeout(newLineResetTimer)
+          }
+          
+          // 短时间后重置换行状态
+          newLineResetTimer = setTimeout(() => {
+            isNewLine.value = false
+            newLineResetTimer = null
+          }, AI_CONFIG.autoComplete.debounce.newLine + 500)
+        } else {
+          // 非换行的普通输入，也取消之前的请求
+          if (!isNewLine.value) {
+            cancelCurrentRequest()
+          }
+          isNewLine.value = false
+        }
+        
+        lastLineNumber = currentLine
+      }
+    }
+  })
+
+  // 监听粘贴事件
+  editor.onDidPaste(() => {
+    // 取消之前的请求
+    cancelCurrentRequest()
+    
+    isPasting.value = true
+    console.log('[AiEditor] 检测到粘贴，使用延迟触发')
+    
+    // 清除之前的定时器
+    if (pasteResetTimer) {
+      clearTimeout(pasteResetTimer)
+    }
+    
+    // 粘贴后一段时间内标记为粘贴状态
+    pasteResetTimer = setTimeout(() => {
+      isPasting.value = false
+      pasteResetTimer = null
+    }, AI_CONFIG.autoComplete.debounce.paste + 500)
   })
 
   // 注册内联补全提供者
@@ -251,6 +435,17 @@ function initEditor() {
  */
 function destroyEditor() {
   cancelCurrentRequest()
+  
+  // 清理定时器
+  if (newLineResetTimer) {
+    clearTimeout(newLineResetTimer)
+    newLineResetTimer = null
+  }
+  
+  if (pasteResetTimer) {
+    clearTimeout(pasteResetTimer)
+    pasteResetTimer = null
+  }
   
   if (inlineCompletionProvider) {
     inlineCompletionProvider.dispose()

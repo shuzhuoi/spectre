@@ -7,6 +7,82 @@
 
 ---
 
+## [1.2.0] - 2026-01-07
+
+### 新增 ✨
+
+#### 智能上下文管理
+- 可配置的上下文获取策略
+  - 按行数模式：发送前 N 行 + 当前行
+  - 按字符数模式：发送最后 N 个字符
+- 支持 `maxLines: 0` 只发送当前行（节省 token）
+- 自动截断超长上下文，保留最后的内容
+
+#### 差异化防抖延迟
+- 正常编写延迟（默认 500ms）
+- 换行时延迟（默认 200ms）- 快速响应
+- 粘贴后延迟（默认 1000ms）
+- 自动检测换行和粘贴事件
+- 给用户更多时间调整粘贴内容
+
+#### 智能触发条件
+- 换行时快速触发（可配置）
+- 标点符号后不触发（句号、问号等）
+- 可自定义跳过的标点符号列表
+- 避免不必要的补全请求
+
+### 改进 🔧
+
+#### 配置结构优化
+- 新增 `autoComplete` 配置节
+  - `minTriggerLength`：触发补全的最小字符数
+  - `debounce.normal`：正常编写延迟
+  - `debounce.newLine`：换行时延迟
+  - `debounce.paste`：粘贴后延迟
+  - `context.mode`：上下文模式（lines/chars）
+  - `context.maxLines`：最多发送前 N 行
+  - `context.maxChars`：最多发送 N 个字符
+  - `trigger.onNewLine`：换行时是否快速触发
+  - `trigger.skipAfterPunctuation`：不触发的标点符号列表
+
+#### 性能优化
+- 减少发送给 AI 的文本量
+- 避免发送全部文档内容
+- 智能上下文窗口控制
+- 降低 API 调用成本
+
+### 修复 🐛
+
+- 修复 `maxLines: 0` 时无法获取当前行内容的问题
+- 修复快速换行时触发多条请求的问题
+- 修复换行后空行无法触发补全的问题（换行时自动获取上一行内容）
+- 修复换行时 `minTriggerLength` 限制过严的问题（换行时放宽为1字符）
+- 添加请求取消机制，避免重复请求
+- 正确清理定时器，防止内存泄漏
+
+### 文档 📚
+
+- 更新配置说明文档
+- 新增上下文优化说明
+- 更新配置示例文件
+- 新增功能验证清单
+
+### 技术细节 🔍
+
+**修改文件**：
+- `src/api/config.ts` - 新增 `AutoCompleteConfig` 接口
+- `src/api/config.local.ts` - 更新配置结构
+- `src/api/config.local.example.ts` - 更新配置示例
+- `src/components/AiEditor.vue` - 实现上下文获取和粘贴检测
+- `src/composables/useAiCompletion.ts` - 支持差异化防抖
+- `README.md` - 更新配置说明
+
+**破坏性变更**：
+- 配置文件结构变更：`minTriggerLength` 和 `debounceDelay` 移至 `autoComplete` 节点下
+- 需要更新现有的 `config.local.ts` 文件
+
+---
+
 ## [1.1.0] - 2026-01-07
 
 ### 新增 ✨
