@@ -261,7 +261,7 @@ pnpm dev
 
 - [Dify Workflow API 文档](https://docs.dify.ai/v/zh-hans/guides/workflow)
 - [Spectre 项目文档](./README.md)
-- [项目架构分析](./agents.md)
+- [项目架构分析](../../AGENT.md)
 
 ## ⚠️ 注意事项
 

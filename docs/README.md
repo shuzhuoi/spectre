@@ -22,67 +22,13 @@
 | [无结果标识符](./dify/NO_RESULT_IDENTIFIER.md) | 无结果处理机制 | 开发者 |
 | [更新日志](./dify/CHANGELOG_DIFY.md) | Dify 功能更新历史 | 维护者 |
 
-### 架构文档
-
-位于 `docs/architecture/` 目录：
-
-| 文档 | 说明 | 适合人群 |
-|------|------|---------|
-| [项目架构分析](./architecture/AGENT.md) | 技术栈和目录结构详解 | 开发者 ⭐ |
-| [实现总结](./architecture/IMPLEMENTATION_SUMMARY.md) | 功能实现细节 | 开发者 |
-| [开发总结](./architecture/SUMMARY.md) | 开发过程和成果 | 维护者 |
-
-## 🎯 按场景查找文档
-
-### 我是新手，想快速上手
-
-1. 阅读 [项目主页](../README.md)
-2. 选择 AI 服务：
-   - 使用 OpenAI → 查看 [README 配置部分](../README.md#2-配置-api)
-   - 使用 Dify → 查看 [Dify 快速开始](./dify/QUICK_START_DIFY.md)
-3. 启动项目：`pnpm dev`
-
-### 我想接入 Dify Workflow
-
-1. [快速开始](./dify/QUICK_START_DIFY.md) - 5 分钟快速配置
-2. [详细接入指南](./dify/DIFY_INTEGRATION.md) - 完整说明
-3. [配置示例](./dify/CONFIG_EXAMPLES.md) - 参考示例
-
-### 我遇到了问题
-
-1. 查看 [Dify 限制说明](./dify/DIFY_LIMITATIONS.md) - 常见问题
-2. 查看 [详细接入指南](./dify/DIFY_INTEGRATION.md) - 调试技巧
-3. 查看 [更新日志](../CHANGELOG.md) - 已知问题
-
-### 我想了解项目架构
-
-1. [项目架构分析](./architecture/AGENT.md) - 技术栈和结构
-2. [实现总结](./architecture/IMPLEMENTATION_SUMMARY.md) - 实现细节
-3. 查看源代码注释
 
 ### 我想贡献代码
 
-1. 阅读 [项目架构分析](./architecture/AGENT.md)
+1. 阅读 [项目架构分析](../AGENT.md)
 2. 查看 [更新日志](../CHANGELOG.md) - 了解最新变更
 3. 查看 [路线图](../CHANGELOG.md#路线图) - 计划中的功能
 
-## 📖 文档结构
-
-```
-docs/
-├── README.md                    # 本文件 - 文档导航
-├── dify/                        # Dify 相关文档
-│   ├── QUICK_START_DIFY.md     # 快速开始
-│   ├── DIFY_INTEGRATION.md     # 详细接入指南
-│   ├── CONFIG_EXAMPLES.md      # 配置示例
-│   ├── DIFY_LIMITATIONS.md     # 限制说明
-│   ├── NO_RESULT_IDENTIFIER.md # 无结果标识符
-│   └── CHANGELOG_DIFY.md       # Dify 更新日志
-└── architecture/                # 架构文档
-    ├── AGENT.md                 # 项目架构分析
-    ├── IMPLEMENTATION_SUMMARY.md # 实现总结
-    └── SUMMARY.md               # 开发总结
-```
 
 ## 🔗 外部资源
 
@@ -143,7 +89,7 @@ docs/
 
 如果文档无法解决你的问题：
 
-1. 查看 [Issues](https://github.com/your-repo/issues) 是否有类似问题
+1. 查看 [Issues](https://github.com/shuzhuoi/spectre/issues) 是否有类似问题
 2. 提交新的 Issue 描述你的问题
 3. 加入讨论区与其他开发者交流
 
@@ -151,4 +97,4 @@ docs/
 
 **文档版本**：1.1.0  
 **最后更新**：2026-01-07  
-**维护者**：Spectre Team
+**维护者**：shuzhuoi

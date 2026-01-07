@@ -105,7 +105,7 @@ export const AI_CONFIG: AIConfig = {
 }
 ```
 
-> 💡 详细的 Dify 接入指南请查看 [DIFY_INTEGRATION.md](./DIFY_INTEGRATION.md)
+> 💡 详细的 Dify 接入指南请查看 [DIFY_INTEGRATION.md](./docs/dify/DIFY_INTEGRATION.md)
 
 > 💡 `config.local.ts` 已被 `.gitignore` 忽略，不会提交到 Git，你的 API Key 是安全的。
 
