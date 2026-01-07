@@ -3,5 +3,7 @@
  */
 
 export * from './config'
-export * from './openai'
+export * from './client'
+export * as OpenAIClient from './openai'
+export * as DifyClient from './dify'
 

@@ -5,8 +5,8 @@
 
 import { ref, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { getStreamCompletion, isConfigValid } from '@/api/openai'
-import { OPENAI_CONFIG } from '@/api/config'
+import { getStreamCompletion, isConfigValid } from '@/api/client'
+import { AI_CONFIG } from '@/api/config'
 
 /**
  * AI 补全 Hook
@@ -47,7 +47,7 @@ export function useAiCompletion() {
     }
 
     // 文本太短时不触发
-    if (text.trim().length < OPENAI_CONFIG.minTriggerLength) {
+    if (text.trim().length < AI_CONFIG.minTriggerLength) {
       suggestion.value = ''
       return ''
     }
@@ -96,7 +96,7 @@ export function useAiCompletion() {
    */
   const debouncedRequestCompletion = useDebounceFn(
     requestCompletion,
-    OPENAI_CONFIG.debounceDelay
+    AI_CONFIG.debounceDelay
   )
 
   /**

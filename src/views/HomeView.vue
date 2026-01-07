@@ -7,8 +7,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage, ElNotification } from 'element-plus'
 import AiEditor from '@/components/AiEditor.vue'
-import { isConfigValid } from '@/api/openai'
-import { OPENAI_CONFIG } from '@/api/config'
+import { isConfigValid, getModelInfo } from '@/api/client'
 
 // 编辑器引用
 const editorRef = ref<InstanceType<typeof AiEditor>>()
@@ -60,7 +59,7 @@ const themeOptions = [
 const apiConfigured = computed(() => isConfigValid())
 
 // 显示的模型信息
-const modelInfo = computed(() => `模型: ${OPENAI_CONFIG.model}`)
+const modelInfo = computed(() => getModelInfo())
 
 /**
  * 补全开始事件处理

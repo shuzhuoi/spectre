@@ -20,7 +20,7 @@
 - Vue 3 + TypeScript + Vite
 - Monaco Editor (VS Code 同款编辑器)
 - Element Plus UI 组件库
-- OpenAI Node.js SDK
+- OpenAI Node.js SDK / Dify Workflow API
 - Pinia 状态管理
 - VueUse 工具库
 
@@ -34,6 +34,10 @@ pnpm install
 
 ### 2. 配置 API
 
+项目支持两种 AI 服务接入方式：**OpenAI** 和 **Dify Workflow**
+
+#### 方式一：使用 OpenAI（或兼容服务）
+
 复制样例配置文件并填入你的 API 信息：
 
 ```bash
@@ -43,23 +47,28 @@ cp src/api/config.local.example.ts src/api/config.local.ts
 然后编辑 `src/api/config.local.ts`：
 
 ```typescript
-export const OPENAI_CONFIG: OpenAIConfig = {
-  // API 基础地址
-  baseURL: 'https://api.openai.com/v1',
+export const AI_CONFIG: AIConfig = {
+  // 选择 OpenAI 作为提供商
+  provider: 'openai',
   
-  // API 密钥
-  apiKey: 'sk-your-api-key-here',
+  openai: {
+    // API 基础地址
+    baseURL: 'https://api.openai.com/v1',
+    
+    // API 密钥
+    apiKey: 'sk-your-api-key-here',
+    
+    // 模型名称
+    model: 'gpt-3.5-turbo',
+    
+    // 其他参数...
+  },
   
-  // 模型名称
-  model: 'gpt-3.5-turbo',
-  
-  // 其他参数...
+  // ...
 }
 ```
 
-> 💡 `config.local.ts` 已被 `.gitignore` 忽略，不会提交到 Git，你的 API Key 是安全的。
-
-**支持的 API 服务：**
+**支持的 OpenAI 兼容服务：**
 
 | 服务 | baseURL |
 |------|---------|
@@ -68,6 +77,37 @@ export const OPENAI_CONFIG: OpenAIConfig = {
 | 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | 本地 Ollama | `http://localhost:11434/v1` |
 | 其他兼容服务 | 自定义地址 |
+
+#### 方式二：使用 Dify Workflow
+
+编辑 `src/api/config.local.ts`：
+
+```typescript
+export const AI_CONFIG: AIConfig = {
+  // 选择 Dify 作为提供商
+  provider: 'dify',
+  
+  dify: {
+    // Dify API 基础地址
+    baseURL: 'http://your-dify-server/v1',
+    
+    // Dify API 密钥
+    apiKey: 'app-xxxxxxxxxx',
+    
+    // 输入变量名称（你在 Dify workflow 中定义的变量名）
+    inputVariable: 'inputText',
+    
+    // 响应模式：streaming（推荐）或 blocking
+    responseMode: 'streaming'
+  },
+  
+  // ...
+}
+```
+
+> 💡 详细的 Dify 接入指南请查看 [DIFY_INTEGRATION.md](./DIFY_INTEGRATION.md)
+
+> 💡 `config.local.ts` 已被 `.gitignore` 忽略，不会提交到 Git，你的 API Key 是安全的。
 
 ### 3. 启动开发服务器
 
@@ -117,15 +157,38 @@ src/
 
 在 `src/api/config.local.ts` 中可配置以下选项：
 
+### 通用配置
+
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| baseURL | string | `https://api.openai.com/v1` | API 基础地址 |
+| provider | string | `openai` | AI 服务提供商：`openai` 或 `dify` |
+| minTriggerLength | number | 5 | 触发补全的最小字符数 |
+| debounceDelay | number | 500 | 防抖延迟 (ms) |
+
+### OpenAI 配置
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| baseURL | string | - | API 基础地址 |
 | apiKey | string | - | API 密钥 |
 | model | string | `gpt-3.5-turbo` | 使用的模型 |
 | maxTokens | number | 100 | 补全最大 token 数 |
 | temperature | number | 0.3 | 生成随机性 (0-2) |
-| minTriggerLength | number | 5 | 触发补全的最小字符数 |
-| debounceDelay | number | 500 | 防抖延迟 (ms) |
+
+### Dify 配置
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| baseURL | string | - | Dify API 基础地址 |
+| apiKey | string | - | Dify API 密钥 |
+| inputVariable | string | `text` | 输入变量名称 |
+| responseMode | string | `streaming` | 响应模式：`streaming` 或 `blocking` |
+| maxInputLength | number | 256 | 输入文本最大长度（-1 不限制，>0 按配置截断） |
+| noResultIdentifier | string | `[NONE]` | 无结果标识符，返回此值时不显示补全 |
+
+> ⚠️ **Dify 限制**：Dify Workflow 的输入变量最多只能接收 256 个字符（官方限制）。超过此长度的文本会自动截断，保留最后的字符。设置为 `-1` 可以不限制（如果你的 Dify 实例支持）。
+
+> 💡 **无结果处理**：当 Dify 返回 `noResultIdentifier` 配置的值（默认 `[NONE]`）时，表示没有补全结果，不会在页面上显示。
 
 ## ⚠️ 安全提醒
 
@@ -174,6 +237,13 @@ docker-compose build
 ```
 
 > 💡 Docker 构建前请确保已配置 `src/api/config.local.ts` 文件。
+
+## 📚 文档
+
+- [完整文档导航](./docs/README.md) - 所有文档的索引
+- [更新日志](./CHANGELOG.md) - 版本历史和变更记录
+- [Dify 快速开始](./docs/dify/QUICK_START_DIFY.md) - 5 分钟接入 Dify
+- [项目架构分析](./docs/architecture/AGENT.md) - 技术栈和目录结构
 
 ## 📄 License
 

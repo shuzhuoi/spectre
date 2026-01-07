@@ -4,18 +4,29 @@
  */
 
 import OpenAI from 'openai'
-import { OPENAI_CONFIG, COMPLETION_SYSTEM_PROMPT } from './config'
+import { AI_CONFIG, COMPLETION_SYSTEM_PROMPT } from './config'
+import type { OpenAIConfig } from './config'
+
+/**
+ * 获取 OpenAI 配置
+ */
+function getOpenAIConfig(): OpenAIConfig {
+  return AI_CONFIG.openai
+}
 
 /**
  * 创建 OpenAI 客户端实例
  * dangerouslyAllowBrowser: true 允许在浏览器环境中使用
  * ⚠️ 生产环境建议通过后端代理转发请求
  */
-const client = new OpenAI({
-  baseURL: OPENAI_CONFIG.baseURL,
-  apiKey: OPENAI_CONFIG.apiKey,
-  dangerouslyAllowBrowser: true // 允许在浏览器中使用
-})
+function createClient(): OpenAI {
+  const config = getOpenAIConfig()
+  return new OpenAI({
+    baseURL: config.baseURL,
+    apiKey: config.apiKey,
+    dangerouslyAllowBrowser: true // 允许在浏览器中使用
+  })
+}
 
 /**
  * 补全结果回调函数类型
@@ -34,11 +45,14 @@ export async function getStreamCompletion(
   onChunk?: CompletionCallback,
   signal?: AbortSignal
 ): Promise<string> {
+  const config = getOpenAIConfig()
+  const client = createClient()
+  
   try {
     // 创建流式聊天补全请求
     const stream = await client.chat.completions.create(
       {
-        model: OPENAI_CONFIG.model,
+        model: config.model,
         messages: [
           {
             role: 'system',
@@ -49,8 +63,8 @@ export async function getStreamCompletion(
             content: `请补全以下文本的后续内容：\n\n${prompt}`
           }
         ],
-        max_tokens: OPENAI_CONFIG.maxTokens,
-        temperature: OPENAI_CONFIG.temperature,
+        max_tokens: config.maxTokens,
+        temperature: config.temperature,
         stream: true, // 启用流式输出
         stop: ['\n\n', '。\n', '.\n'] // 遇到这些字符停止生成
       },
@@ -102,10 +116,13 @@ export async function getCompletion(
   prompt: string,
   signal?: AbortSignal
 ): Promise<string> {
+  const config = getOpenAIConfig()
+  const client = createClient()
+  
   try {
     const response = await client.chat.completions.create(
       {
-        model: OPENAI_CONFIG.model,
+        model: config.model,
         messages: [
           {
             role: 'system',
@@ -116,8 +133,8 @@ export async function getCompletion(
             content: `请补全以下文本的后续内容：\n\n${prompt}`
           }
         ],
-        max_tokens: OPENAI_CONFIG.maxTokens,
-        temperature: OPENAI_CONFIG.temperature,
+        max_tokens: config.maxTokens,
+        temperature: config.temperature,
         stream: false
       },
       {
@@ -142,15 +159,11 @@ export async function getCompletion(
  * @returns 配置是否有效
  */
 export function isConfigValid(): boolean {
+  const config = getOpenAIConfig()
   return (
-    OPENAI_CONFIG.baseURL.length > 0 &&
-    OPENAI_CONFIG.apiKey.length > 0 &&
-    OPENAI_CONFIG.apiKey !== 'sk-your-api-key-here'
+    config.baseURL.length > 0 &&
+    config.apiKey.length > 0 &&
+    config.apiKey !== 'sk-your-api-key-here'
   )
 }
-
-/**
- * 导出客户端实例（用于高级用法）
- */
-export { client }
 

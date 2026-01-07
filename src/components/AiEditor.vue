@@ -9,8 +9,8 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useDebounceFn } from '@vueuse/core'
-import { getStreamCompletion, isConfigValid } from '@/api/openai'
-import { OPENAI_CONFIG } from '@/api/config'
+import { getStreamCompletion, isConfigValid } from '@/api/client'
+import { AI_CONFIG } from '@/api/config'
 
 // 定义组件属性
 interface Props {
@@ -83,7 +83,7 @@ async function getAiCompletion(text: string): Promise<string> {
   }
 
   // 文本太短不触发
-  if (text.trim().length < OPENAI_CONFIG.minTriggerLength) {
+  if (text.trim().length < AI_CONFIG.minTriggerLength) {
     return ''
   }
 
@@ -127,7 +127,7 @@ async function getAiCompletion(text: string): Promise<string> {
  */
 const debouncedGetCompletion = useDebounceFn(
   getAiCompletion,
-  OPENAI_CONFIG.debounceDelay
+  AI_CONFIG.debounceDelay
 )
 
 /**
